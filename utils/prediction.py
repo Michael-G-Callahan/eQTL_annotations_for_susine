@@ -144,9 +144,12 @@ def analyze_variant(
         result["reason"] = "outside_input_window"
         return result
 
-    if centering == "tss" and not is_in_editable_region(snp_pos_in_window, editable_start, editable_end):
-        result["reason"] = "outside_editable_region"
-        return result
+    # REMOVED: This check incorrectly restricted SNPs to the output window.
+    # For TSS-centered predictions, the gene is in the center (valid output),
+    # and SNPs anywhere in the input window (receptive field) can affect it.
+    # if centering == "tss" and not is_in_editable_region(snp_pos_in_window, editable_start, editable_end):
+    #     result["reason"] = "outside_editable_region"
+    #     return result
 
     gene_exon_bins = get_output_bins_for_interval(
         list(models.values())[0],
