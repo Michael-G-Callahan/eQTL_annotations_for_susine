@@ -117,6 +117,7 @@ def analyze_variant(
     genome: str,
     centering: str = "tss",
     fasta_meta: Optional[Dict] = None,
+    precomputed_ref_preds: Optional[List[float]] = None,
 ) -> Dict:
     """
     Analyze a single variant across all model replicates.
@@ -178,17 +179,20 @@ def analyze_variant(
     ref_preds: List[float] = []
     alt_preds: List[float] = []
 
-    for _, model in models.items():
-        ref_pred = predict_on_sequence(model, ref_seq, device=device)
-        alt_pred = predict_on_sequence(model, alt_seq, device=device)
+    for i, (_, model) in enumerate(models.items()):
+        if precomputed_ref_preds is not None:
+            ref_agg = precomputed_ref_preds[i]
+        else:
+            ref_pred = predict_on_sequence(model, ref_seq, device=device)
+            ref_agg = aggregate_predictions(
+                ref_pred,
+                task_indices,
+                bin_indices,
+                task_agg=task_agg,
+                length_agg=length_agg,
+            )
 
-        ref_agg = aggregate_predictions(
-            ref_pred,
-            task_indices,
-            bin_indices,
-            task_agg=task_agg,
-            length_agg=length_agg,
-        )
+        alt_pred = predict_on_sequence(model, alt_seq, device=device)
         alt_agg = aggregate_predictions(
             alt_pred,
             task_indices,
